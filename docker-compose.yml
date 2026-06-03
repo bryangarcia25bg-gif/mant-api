@@ -1,0 +1,40 @@
+services:
+
+  db:
+    image: postgres:16-alpine
+    container_name: mant-api-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       mant_api
+      POSTGRES_USER:     postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres123}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mant_api"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    container_name: mant-api-container
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST:     db
+      DB_PORT:     5432
+      DB_NAME:     mant_api
+      DB_USER:     postgres
+      DB_PASSWORD: ${DB_PASSWORD:-postgres123}
+      PORT:        3000
+    ports:
+      - "3000:3000"
+
+volumes:
+  pg_data:

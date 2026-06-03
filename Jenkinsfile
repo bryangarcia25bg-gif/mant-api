@@ -15,53 +15,41 @@ pipeline {
             steps {
                 echo "Clonando repositorio desde GitHub..."
                 checkout scm
-                echo "Código descargado. Rama: ${env.GIT_BRANCH ?: 'main'}"
+                echo "Rama: ${env.GIT_BRANCH ?: 'main'}"
             }
         }
 
         stage('Instalar dependencias y correr tests') {
             steps {
-                echo "Instalando dependencias de Node.js..."
                 bat 'npm install'
-
-                echo "Ejecutando tests con Jest..."
                 bat 'npm test'
             }
             post {
-                always {
-                    echo "Tests finalizados. Revisando resultados..."
-                }
-                failure {
-                    echo "FALLO en los tests. Abortando pipeline."
-                }
+                failure { echo 'FALLO en los tests. Abortando pipeline.' }
             }
         }
 
         stage('Build imagen Docker') {
             steps {
-                echo "Construyendo imagen Docker: ${IMAGE_NAME}:${IMAGE_TAG}"
+                echo "Construyendo imagen: ${IMAGE_NAME}:${IMAGE_TAG}"
                 bat "docker build -t %IMAGE_NAME%:%IMAGE_TAG% ."
                 bat "docker tag %IMAGE_NAME%:%IMAGE_TAG% %IMAGE_NAME%:latest"
                 echo "Imagen construida exitosamente."
             }
         }
 
-        stage('Deploy contenedor') {
+        stage('Deploy con Docker Compose') {
             steps {
-                echo "Deteniendo y eliminando contenedor anterior si existe..."
-                bat """
-                    docker stop mant-api-container 2>nul
-                    docker rm   mant-api-container 2>nul
-                    exit 0
-                """
+                echo "Bajando servicios anteriores..."
+                bat "docker compose down --remove-orphans 2>nul & exit 0"
 
-                echo "Iniciando nuevo contenedor en puerto ${PORT_HOST}..."
-                bat "docker run -d --name mant-api-container -p %PORT_HOST%:3000 mant-api:latest"
+                echo "Levantando PostgreSQL + API..."
+                bat "docker compose up -d --build"
 
-                echo "Esperando que la API levante..."
-                bat "ping -n 6 127.0.0.1 > nul"
+                echo "Esperando que los servicios inicien..."
+                bat "ping -n 15 127.0.0.1 > nul"
 
-                echo "Verificando health check..."
+                echo "Verificando health check de la API..."
                 bat "curl -f http://localhost:%PORT_HOST%/health"
             }
         }
@@ -69,36 +57,29 @@ pipeline {
 
     post {
         success {
-            echo "Pipeline completado exitosamente. API disponible en http://localhost:${PORT_HOST}"
+            echo "Pipeline completado. API + PostgreSQL corriendo en puerto ${PORT_HOST}."
             emailext(
                 to: "${CORREO}",
-                subject: "OK - mant-api desplegada | Build #${BUILD_NUMBER}",
+                subject: "OK - mant-api v2 desplegada | Build #${BUILD_NUMBER}",
                 body: """Pipeline exitoso.
 
 Build:    #${BUILD_NUMBER}
-Estado:   EXITOSO
-API URL:  http://localhost:${PORT_HOST}/equipos
+API:      http://localhost:${PORT_HOST}/equipos
 Resumen:  http://localhost:${PORT_HOST}/equipos/resumen
-
-Ver log completo: ${BUILD_URL}console"""
-            )
-        }
-        failure {
-            echo "El pipeline FALLÓ. Revisar el log en Jenkins."
-            emailext(
-                to: "${CORREO}",
-                subject: "ERROR - mant-api falló | Build #${BUILD_NUMBER}",
-                body: """El pipeline falló.
-
-Build:  #${BUILD_NUMBER}
-Stage:  ${env.STAGE_NAME ?: 'desconocido'}
+Health:   http://localhost:${PORT_HOST}/health
 
 Ver log: ${BUILD_URL}console"""
             )
         }
+        failure {
+            emailext(
+                to: "${CORREO}",
+                subject: "ERROR - mant-api | Build #${BUILD_NUMBER}",
+                body: "El pipeline falló. Ver log: ${BUILD_URL}console"
+            )
+        }
         always {
-            echo "Limpiando imágenes Docker antiguas..."
-            bat "docker image prune -f"
+            bat "docker image prune -f 2>nul & exit 0"
         }
     }
 }
