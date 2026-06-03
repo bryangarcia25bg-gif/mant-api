@@ -21,11 +21,17 @@ pipeline {
 
         stage('Instalar dependencias y correr tests') {
             steps {
-                bat 'npm install'
-                bat 'npm test'
+                echo "Instalando con pnpm (instalacion deterministica)..."
+                bat 'pnpm install --frozen-lockfile'
+
+                echo "Auditando vulnerabilidades de seguridad..."
+                bat 'pnpm audit --audit-level=high'
+
+                echo "Ejecutando tests con Jest..."
+                bat 'pnpm test'
             }
             post {
-                failure { echo 'FALLO en los tests. Abortando pipeline.' }
+                failure { echo 'FALLO en tests o auditoria de seguridad.' }
             }
         }
 
@@ -48,7 +54,7 @@ pipeline {
                 echo "Levantando PostgreSQL + API..."
                 bat "docker compose up -d"
 
-                echo "Esperando 40 segundos para que PostgreSQL inicialice..."
+                echo "Esperando que los servicios inicien..."
                 bat "ping -n 41 127.0.0.1 > nul"
 
                 echo "Verificando health check de la API..."

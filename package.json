@@ -1,8 +1,9 @@
 {
   "name": "mant-api",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "API REST de gestión de equipos industriales",
   "main": "src/app.js",
+  "packageManager": "pnpm@9.1.0",
   "scripts": {
     "start": "node src/app.js",
     "dev": "node src/app.js",

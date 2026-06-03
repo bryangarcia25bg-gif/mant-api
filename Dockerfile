@@ -1,9 +1,11 @@
 FROM node:20-alpine
 
+RUN npm install -g pnpm@9.1.0
+
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm install --only=production
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --prod --frozen-lockfile
 
 COPY src/ ./src/
 
