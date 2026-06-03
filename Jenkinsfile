@@ -48,15 +48,20 @@ pipeline {
 
         stage('Deploy contenedor') {
             steps {
-                echo "Deteniendo contenedor anterior si existe..."
-                bat "docker stop %IMAGE_NAME%-container || echo No habia contenedor previo"
-                bat "docker rm   %IMAGE_NAME%-container || echo Nada que eliminar"
+                echo "Deteniendo y eliminando contenedor anterior si existe..."
+                bat """
+                    docker stop mant-api-container 2>nul
+                    docker rm   mant-api-container 2>nul
+                    exit 0
+                """
 
                 echo "Iniciando nuevo contenedor en puerto ${PORT_HOST}..."
-                bat "docker run -d --name %IMAGE_NAME%-container -p %PORT_HOST%:3000 %IMAGE_NAME%:latest"
+                bat "docker run -d --name mant-api-container -p %PORT_HOST%:3000 mant-api:latest"
 
-                echo "Verificando que la API responde..."
+                echo "Esperando que la API levante..."
                 bat "ping -n 6 127.0.0.1 > nul"
+
+                echo "Verificando health check..."
                 bat "curl -f http://localhost:%PORT_HOST%/health"
             }
         }
