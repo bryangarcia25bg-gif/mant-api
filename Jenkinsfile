@@ -43,6 +43,10 @@ pipeline {
                 echo "Bajando servicios anteriores..."
                 bat "docker compose down --remove-orphans 2>nul & exit 0"
 
+                echo "Eliminando contenedor huerfano si existe..."
+                bat "docker stop mant-api-container 2>nul & exit 0"
+                bat "docker rm   mant-api-container 2>nul & exit 0"
+
                 echo "Levantando PostgreSQL + API..."
                 bat "docker compose up -d --build"
 
@@ -75,7 +79,7 @@ Ver log: ${BUILD_URL}console"""
             emailext(
                 to: "${CORREO}",
                 subject: "ERROR - mant-api | Build #${BUILD_NUMBER}",
-                body: "El pipeline falló. Ver log: ${BUILD_URL}console"
+                body: "El pipeline fallo. Ver log: ${BUILD_URL}console"
             )
         }
         always {
