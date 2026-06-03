@@ -40,19 +40,22 @@ pipeline {
 
         stage('Deploy con Docker Compose') {
             steps {
-                echo "Bajando servicios y limpiando volumenes anteriores..."
+                echo "Bajando servicios anteriores..."
                 bat "docker compose down -v --remove-orphans 2>nul & exit 0"
                 bat "docker stop mant-api-container 2>nul & exit 0"
                 bat "docker rm   mant-api-container 2>nul & exit 0"
 
                 echo "Levantando PostgreSQL + API..."
-                bat "docker compose up -d --build"
+                bat "docker compose up -d"
 
-                echo "Esperando que los servicios inicien..."
-                bat "ping -n 20 127.0.0.1 > nul"
+                echo "Esperando 40 segundos para que PostgreSQL inicialice..."
+                bat "ping -n 41 127.0.0.1 > nul"
 
                 echo "Verificando health check de la API..."
                 bat "curl -f http://localhost:%PORT_HOST%/health"
+
+                echo "Verificando equipos en base de datos..."
+                bat "curl -f http://localhost:%PORT_HOST%/equipos/resumen"
             }
         }
     }
@@ -62,7 +65,7 @@ pipeline {
             echo "Pipeline completado. API + PostgreSQL corriendo en puerto ${PORT_HOST}."
             emailext(
                 to: "${CORREO}",
-                subject: "OK - mant-api v2 desplegada | Build #${BUILD_NUMBER}",
+                subject: "OK - mant-api desplegada | Build #${BUILD_NUMBER}",
                 body: """Pipeline exitoso.
 
 Build:    #${BUILD_NUMBER}
