@@ -2,10 +2,11 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "mant-api"
-        IMAGE_TAG  = "build-${BUILD_NUMBER}"
-        PORT_HOST  = "3000"
-        CORREO     = "tucorreo@gmail.com"
+        IMAGE_NAME  = "mant-api"
+        IMAGE_TAG   = "build-${BUILD_NUMBER}"
+        PORT_HOST   = "3000"
+        CORREO      = "tucorreo@gmail.com"
+        DOCKER_HOST = "tcp://localhost:2375"
     }
 
     stages {
