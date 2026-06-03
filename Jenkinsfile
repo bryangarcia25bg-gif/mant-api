@@ -21,7 +21,10 @@ pipeline {
 
         stage('Instalar dependencias y correr tests') {
             steps {
-                echo "Instalando con pnpm (instalacion deterministica)..."
+                echo "Instalando pnpm si no esta disponible..."
+                bat 'npm install -g pnpm@9.1.0 --prefer-offline 2>nul || npm install -g pnpm@9.1.0'
+
+                echo "Instalando dependencias con pnpm..."
                 bat 'pnpm install --frozen-lockfile'
 
                 echo "Auditando vulnerabilidades de seguridad..."
