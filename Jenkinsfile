@@ -40,10 +40,8 @@ pipeline {
 
         stage('Deploy con Docker Compose') {
             steps {
-                echo "Bajando servicios anteriores..."
-                bat "docker compose down --remove-orphans 2>nul & exit 0"
-
-                echo "Eliminando contenedor huerfano si existe..."
+                echo "Bajando servicios y limpiando volumenes anteriores..."
+                bat "docker compose down -v --remove-orphans 2>nul & exit 0"
                 bat "docker stop mant-api-container 2>nul & exit 0"
                 bat "docker rm   mant-api-container 2>nul & exit 0"
 
@@ -51,7 +49,7 @@ pipeline {
                 bat "docker compose up -d --build"
 
                 echo "Esperando que los servicios inicien..."
-                bat "ping -n 15 127.0.0.1 > nul"
+                bat "ping -n 20 127.0.0.1 > nul"
 
                 echo "Verificando health check de la API..."
                 bat "curl -f http://localhost:%PORT_HOST%/health"
