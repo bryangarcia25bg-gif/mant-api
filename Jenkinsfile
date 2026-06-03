@@ -7,6 +7,7 @@ pipeline {
         PORT_HOST   = "3000"
         CORREO      = "tucorreo@gmail.com"
         DOCKER_HOST = "tcp://localhost:2375"
+        PNPM        = "C:\\WINDOWS\\system32\\config\\systemprofile\\AppData\\Roaming\\npm\\pnpm.cmd"
     }
 
     stages {
@@ -24,18 +25,14 @@ pipeline {
                 echo "Instalando pnpm globalmente..."
                 bat 'npm install -g pnpm@9.1.0'
 
-                echo "Ubicacion de pnpm:"
-                bat 'npm root -g'
-                bat 'npm bin -g'
-
-                echo "Instalando dependencias con pnpm via npx..."
-                bat 'npx pnpm install --frozen-lockfile'
+                echo "Instalando dependencias con pnpm..."
+                bat '"%PNPM%" install --frozen-lockfile'
 
                 echo "Auditando vulnerabilidades de seguridad..."
-                bat 'npx pnpm audit --audit-level=high'
+                bat '"%PNPM%" audit --audit-level=high'
 
                 echo "Ejecutando tests con Jest..."
-                bat 'npx pnpm test'
+                bat '"%PNPM%" test'
             }
             post {
                 failure { echo 'FALLO en tests o auditoria de seguridad.' }
