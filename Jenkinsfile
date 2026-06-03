@@ -21,17 +21,21 @@ pipeline {
 
         stage('Instalar dependencias y correr tests') {
             steps {
-                echo "Instalando pnpm si no esta disponible..."
-                bat 'npm install -g pnpm@9.1.0 --prefer-offline 2>nul || npm install -g pnpm@9.1.0'
+                echo "Instalando pnpm globalmente..."
+                bat 'npm install -g pnpm@9.1.0'
 
-                echo "Instalando dependencias con pnpm..."
-                bat 'pnpm install --frozen-lockfile'
+                echo "Ubicacion de pnpm:"
+                bat 'npm root -g'
+                bat 'npm bin -g'
+
+                echo "Instalando dependencias con pnpm via npx..."
+                bat 'npx pnpm install --frozen-lockfile'
 
                 echo "Auditando vulnerabilidades de seguridad..."
-                bat 'pnpm audit --audit-level=high'
+                bat 'npx pnpm audit --audit-level=high'
 
                 echo "Ejecutando tests con Jest..."
-                bat 'pnpm test'
+                bat 'npx pnpm test'
             }
             post {
                 failure { echo 'FALLO en tests o auditoria de seguridad.' }
