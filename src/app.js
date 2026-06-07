@@ -1,3 +1,4 @@
+//RUTAS DE ORDENES DE TRABAJO - HORTIFRUT - CURSO DEVOPS
 const express = require('express');
 const pool = require('./db');
 
@@ -70,7 +71,7 @@ app.post('/equipos', async (req, res) => {
       `INSERT INTO equipos (codigo, nombre, area, estado, ultimo_mantenimiento, proximo_mantenimiento, horas_operacion)
        VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
       [codigo, nombre, area || 'Sin área', estado || 'operativo',
-       ultimo_mantenimiento || null, proximo_mantenimiento || null, horas_operacion || 0]
+        ultimo_mantenimiento || null, proximo_mantenimiento || null, horas_operacion || 0]
     );
     res.status(201).json(result.rows[0]);
   } catch (e) {
