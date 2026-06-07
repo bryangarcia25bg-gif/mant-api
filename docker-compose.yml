@@ -1,3 +1,8 @@
+feature/docker-config
+# Configuración Docker para ambiente de desarrollo - Hortifrut Mantenimiento
+
+# Configuración Docker - Hortifrut Mantenimiento
+develop
 services:
 
   db:
