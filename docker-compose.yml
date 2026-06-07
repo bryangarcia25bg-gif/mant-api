@@ -1,3 +1,4 @@
+# Configuración Docker para ambiente de desarrollo - Hortifrut Mantenimiento
 services:
 
   db:
